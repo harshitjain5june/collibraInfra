@@ -1,3 +1,5 @@
+# Deploying RedHat linux VM
+
 resource "azurerm_virtual_machine" "main" {
   name                  = var.vm-name
   location              = var.location
@@ -16,6 +18,7 @@ resource "azurerm_virtual_machine" "main" {
   }
   storage_os_disk {
     name              = var.os-disk-name
+    disk_size_gb      = var.disk-size
     caching           = var.os-disk-caching
     create_option     = var.os-disk-create_option
     managed_disk_type = var.os-disk-managed_disk_type

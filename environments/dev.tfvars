@@ -1,4 +1,6 @@
-rg-name                          = "harshitjain04"
+# Variables for Dev deployment
+
+rg-name                          = "collibra-rg-dev"
 location                         = "westus"
 vnet-name                        = "collibra-vnet-dev"
 ip-config-name                   = "collibra-ip-config-dev"
@@ -9,6 +11,7 @@ address_prefixes                 = ["10.1.1.0/24"]
 private_ip_address_allocation    = "Dynamic"
 vm-name                          = "collibra-vm-dev"
 vm-size                          = "Standard_D2s_v3"
+disk-size                        = 512
 delete_os_disk_on_termination    = true
 delete_data_disks_on_termination = true
 image-publisher                  = "RedHat"

@@ -1,3 +1,7 @@
+# Deployment of network for VMs
+
+
+#Deploying Vnet (Virtual network)
 resource "azurerm_virtual_network" "collibra-vnet" {
   name                = var.vnet-name
   address_space       = var.address_space
@@ -5,6 +9,7 @@ resource "azurerm_virtual_network" "collibra-vnet" {
   resource_group_name = var.rg-name
 }
 
+#Creating subnet inside the vnet
 resource "azurerm_subnet" "vm-subnet" {
   name                 = var.subnet-name
   resource_group_name  = var.rg-name
@@ -12,6 +17,7 @@ resource "azurerm_subnet" "vm-subnet" {
   address_prefixes     = var.address_prefixes
 }
 
+#Creating network interface
 resource "azurerm_network_interface" "vm-nic" {
   name                = var.nic-name
   location            = var.location

@@ -1,3 +1,5 @@
+# Variables for Production deployment
+
 rg-name                          = "collibra-rg-prod"
 location                         = "westus"
 vnet-name                        = "collibra-vnet-prod"
@@ -7,6 +9,7 @@ address_prefixes                 = ["10.1.1.0/32"]
 private_ip_address_allocation    = "Dynamic"
 vm-name                          = "collibra-vm-prod"
 vm-size                          = "Standard_B16as_v2"
+disk-size                        = 512
 delete_os_disk_on_termination    = true
 delete_data_disks_on_termination = true
 image-publisher                  = "RedHat"

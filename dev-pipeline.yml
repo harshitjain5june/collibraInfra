@@ -1,0 +1,115 @@
+# edp2-deploy-terraform pipeline
+# uses CAT vNext templates for verifying terraform when plan occurs
+
+trigger:
+- none
+
+parameters:
+- name: action
+  type: string
+  values:
+    - apply
+    - plan
+    # - destroy
+  default: apply
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: CAT-vNext/starter-pipeline-templates
+      ref: refs/tags/0.0.0-alpha.12 # IMPORTANT: coordinate with CAT to keep this in sync with latest stable release
+
+variables: 
+
+# load common vars to get values needed at top level outside of templates (i.e. SNOWaaS key)
+- group: edp2-deploy-global 
+
+#Pester Test Setup
+- name: SIC_INFRA_TESTS_DIRECTORY
+  value: "./DeploymentAutomation/tests/terraform/pester/static"
+
+- name: SIC_INFRA_TESTS_TAG_FILTER
+  value: "infra_tf_static_plan"
+
+- name: SIC_INFRA_TESTS_PARAMS_LOCATION
+  value: "./DeploymentAutomation/tests/terraform/pester/static/tf_infrastructure.tests.params.json"
+
+- name: SIC_ENV_VAR_MAP
+  value: ""
+
+# CMDB CI Value per pipeline
+- name: SIC_SERVICENOW_CMDB_CI
+  value: "Standard-Insurance / Enterprise-Data-Platform-2.0 / edp2-deploy-terraform"
+
+# this cannot be true until you are set to go to production and have an official API key from CAT
+- name: SIC_SNOWAAS_IS_PROD_CHANGE
+  value: true
+
+# URL 
+- name: SIC_SNOWAAS_API_BASE_URL
+  value: "https://api.snowaas.standard.com/api"
+
+extends:
+  template: ./stage_templates/path_to_production.yml@templates
+  parameters:
+    devVariables:
+      - group: edp2-deploy-global 
+      - group: edp2-deploy-dev
+      - template: ./DeploymentAutomation/vars/terraform/common-terraform.yml@self
+      - template: ./DeploymentAutomation/vars/terraform/dev-terraform.yml@self 
+    nonProdVariables:
+      - group: edp2-deploy-global 
+      - group: edp2-deploy-nonprod
+      - template: ./DeploymentAutomation/vars/terraform/common-terraform.yml@self
+      - template: ./DeploymentAutomation/vars/terraform/nonprod-terraform.yml@self 
+    prodVariables:
+      - group: edp2-deploy-global 
+      - group: edp2-deploy-prod
+      - template: ./DeploymentAutomation/vars/terraform/common-terraform.yml@self
+      - template: ./DeploymentAutomation/vars/terraform/prod-terraform.yml@self 
+    SIC_SERVICENOW_CMDB_CI: ${{ variables.SIC_SERVICENOW_CMDB_CI }}
+    SIC_SNOWAAS_IS_PROD_CHANGE: ${{ eq(variables.SIC_SNOWAAS_IS_PROD_CHANGE, 'true') }}
+    SIC_SNOWAAS_API_BASE_URL: '${{ variables.SIC_SNOWAAS_API_BASE_URL }}'
+    SIC_SNOWAAS_API_KEY: $(SNOWAAS_API_KEY)
+
+    deployJobs:
+    - ${{ if eq(parameters.action, 'plan') }}:
+      - template: ./job_templates/jobs_plan.yml@templates
+        parameters:
+          TERRAFORM_CLOUD_TOKEN: $(TERRAFORM_CLOUD_TOKEN)
+          TERRAFORM_CLOUD_WORKSPACE: $(SIC_TERRAFORM_WORKSPACE_NAME_INFRA)
+          SIC_TERRAFORM_WORKING_DIRECTORY: $(SIC_TERRAFORM_WORKING_DIRECTORY_INFRA)
+          SIC_TERRAFORM_VERSION: $(SIC_TERRAFORM_VERSION)
+
+    - ${{ if eq(parameters.action, 'apply') }}:
+      - template: ./job_templates/jobs_apply.yml@templates
+        parameters:
+          TERRAFORM_CLOUD_TOKEN: $(TERRAFORM_CLOUD_TOKEN)
+          TERRAFORM_CLOUD_WORKSPACE: $(SIC_TERRAFORM_WORKSPACE_NAME_INFRA)
+          SIC_TERRAFORM_WORKING_DIRECTORY: $(SIC_TERRAFORM_WORKING_DIRECTORY_INFRA)
+          TF_VAR_SIC_RESOURCE_PREFIX: $(TF_VAR_SIC_RESOURCE_PREFIX)
+          SIC_TAG_APP: $(SIC_TAG_APP)
+          SIC_TAG_BACKUP: $(SIC_TAG_BACKUP)
+          SIC_TAG_BILLTO: $(SIC_TAG_BILLTO)
+          SIC_TAG_MANAGED_BY: $(SIC_TAG_MANAGED_BY)
+          SIC_TAG_PROJECT_NAME: $(SIC_TAG_PROJECT_NAME)
+          SIC_TAG_PROJECT_VERSION: $(SIC_TAG_PROJECT_VERSION)
+          SIC_TAG_PURPOSE: $(SIC_TAG_PURPOSE)
+          SIC_TAG_ENVIRONMENT: $(SIC_TAG_ENVIRONMENT)
+          SIC_INFRA_TESTS_DIRECTORY: $(SIC_INFRA_TESTS_DIRECTORY)
+          SIC_INFRA_TESTS_TAG_FILTER: $(SIC_INFRA_TESTS_TAG_FILTER)
+          SIC_INFRA_TESTS_PARAMS_LOCATION: $(SIC_INFRA_TESTS_PARAMS_LOCATION)
+          SIC_ENV_VAR_MAP: $(SIC_ENV_VAR_MAP)
+          SIC_PYTHON_VERSION_SPEC: $(SIC_PYTHON_VERSION)
+          SIC_GIT_HUB_PAT_TOKEN: $(GIT_PAT_TOKEN)
+          SIC_TERRAFORM_VERSION: $(SIC_TERRAFORM_VERSION)
+
+    - ${{ if eq(parameters.action, 'destroy') }}:
+      - template: ./job_templates/jobs_destroy.yml@templates
+        parameters:
+          TERRAFORM_CLOUD_TOKEN: $(TERRAFORM_CLOUD_TOKEN)
+          TERRAFORM_CLOUD_WORKSPACE: $(SIC_TERRAFORM_WORKSPACE_NAME_INFRA)
+          SIC_TERRAFORM_WORKING_DIRECTORY: $(SIC_TERRAFORM_WORKING_DIRECTORY_INFRA)
+          SIC_TERRAFORM_VERSION: $(SIC_TERRAFORM_VERSION)
+

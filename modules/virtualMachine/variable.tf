@@ -68,7 +68,7 @@ variable "admin_username" {
 }
 
 variable "admin_password" {
-  type = string
+  type      = string
   sensitive = true
 }
 
@@ -78,4 +78,8 @@ variable "disable_password_authentication" {
 
 variable "tag-environment" {
   type = string
+}
+
+variable "disk-size" {
+  type = number
 }
